@@ -3,47 +3,58 @@ from flask import Flask
 
 app = Flask(__name__)
 
+TIERS = ["Copper", "Bronze", "Silver", "Gold", "Platinum", "Emerald", "Diamond", "Champion"]
+ROMAN = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V"}
+
+def rank_name(rank_id):
+    if rank_id <= 0:
+        return "Unranked"
+    rank_id = min(rank_id, 40)
+    tier = TIERS[(rank_id - 1) // 5]
+    division = 5 - ((rank_id - 1) % 5)
+    return f"{tier} {ROMAN[division]}"
+
+def rank_name_from_rp(rp):
+    if rp < 1000:
+        return "Unranked"
+    return rank_name(min((rp - 1000) // 100 + 1, 40))
+
 def fetch():
     req = urllib.request.Request(
         os.environ["ARENYZE_URL"],
         headers={"api-key": os.environ["ARENYZE_KEY"], "User-Agent": "Mozilla/5.0"},
     )
-    with urllib.request.urlopen(req, timeout=8) as r:
+    with urllib.request.urlopen(req, timeout=9) as r:
         return json.load(r)
-
-def find(obj, test):
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if test(k, v):
-                return v
-        for v in obj.values():
-            r = find(v, test)
-            if r is not None:
-                return r
-    elif isinstance(obj, list):
-        for v in obj:
-            r = find(v, test)
-            if r is not None:
-                return r
-    return None
-
-def is_rank(k, v):
-    return "rank" in k.lower() and isinstance(v, str) and "http" not in v
-
-def is_rp(k, v):
-    return k.lower() in ("rankpoints", "rank_points", "rp", "mmr") and isinstance(v, (int, float, str))
 
 @app.route("/")
 @app.route("/api/rank")
 def rank():
-    name = os.environ.get("PLAYER_NAME", "Player")
+    name = os.environ.get("PLAYER_NAME", "jfx6.")
     try:
-        data = fetch()
-        r = find(data, is_rank)
-        rp = find(data, is_rp)
-        if r is None:
-            return "Couldn't read rank. Raw: " + json.dumps(data)[:300], 200, {"Cache-Control": "no-store"}
-        text = f"{name} is {r} ({rp} RP)" if rp is not None else f"{name} is {r}"
+        fs = fetch()["fullStats"]
+
+        # current rank = profile from the latest season in the response
+        latest = None
+        for fam in fs["platform_families_full_profiles"]:
+            for board in fam["board_ids_full_profiles"]:
+                for fp in board["full_profiles"]:
+                    if latest is None or fp.get("season_id", 0) > latest.get("season_id", 0):
+                        latest = fp
+        cur = latest["profile"]
+
+        # peak = highest RP across every season that uses RP
+        peak_rp = cur["max_rank_points"]
+        for seg in fs["data"]["segments"]:
+            if seg.get("type") != "season":
+                continue
+            if seg.get("metadata", {}).get("rankType") != "rp":
+                continue
+            v = seg.get("stats", {}).get("maxRankPoints", {}).get("value", 0)
+            peak_rp = max(peak_rp, v)
+
+        text = (f"Current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
+                f"Peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
         return text, 200, {
             "Content-Type": "text/plain; charset=utf-8",
             "Cache-Control": "public, s-maxage=1800",
