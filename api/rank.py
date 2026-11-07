@@ -53,8 +53,8 @@ def rank():
             v = seg.get("stats", {}).get("maxRankPoints", {}).get("value", 0)
             peak_rp = max(peak_rp, v)
 
-        text = (f"Current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
-                f"Peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
+        text = (f"My current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
+                f"My peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
         return text, 200, {
             "Content-Type": "text/plain; charset=utf-8",
             "Cache-Control": "public, s-maxage=1800",
