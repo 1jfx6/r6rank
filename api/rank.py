@@ -30,7 +30,8 @@ def fetch():
 @app.route("/")
 @app.route("/api/rank")
 def rank():
-    name = os.environ.get("PLAYER_NAME", "jfx6.")
+    name = os.environ.get("PLAYER_NAME", "Unavailable")
+    display = os.environ.get("DISPLAY_NAME", "Player")
     try:
         fs = fetch()["fullStats"]
 
@@ -53,8 +54,8 @@ def rank():
             v = seg.get("stats", {}).get("maxRankPoints", {}).get("value", 0)
             peak_rp = max(peak_rp, v)
 
-        text = (f"jfx's current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
-                f"jfx's peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
+        text = (f"{display}'s current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
+                f"{display}'s peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
         return text, 200, {
             "Content-Type": "text/plain; charset=utf-8",
             "Cache-Control": "public, s-maxage=1800",
