@@ -35,7 +35,7 @@ def rank():
     try:
         fs = fetch()["fullStats"]
 
-        # current rank = profile from the latest season in the response
+        # current rank
         latest = None
         for fam in fs["platform_families_full_profiles"]:
             for board in fam["board_ids_full_profiles"]:
@@ -44,7 +44,7 @@ def rank():
                         latest = fp
         cur = latest["profile"]
 
-        # peak = highest RP across every season that uses RP
+        # peak
         peak_rp = cur["max_rank_points"]
         for seg in fs["data"]["segments"]:
             if seg.get("type") != "season":
@@ -56,7 +56,6 @@ def rank():
 
         text = (f"{display}'s current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
                 f"{display}'s peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
-        text += f" [season {latest.get('season_id')}, wins {latest['season_statistics']['match_outcomes']['wins']}]"
         return text, 200, {
             "Content-Type": "text/plain; charset=utf-8",
             "Cache-Control": "no-store",
