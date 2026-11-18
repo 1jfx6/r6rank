@@ -56,6 +56,7 @@ def rank():
 
         text = (f"{display}'s current rank: {rank_name(cur['rank'])} ({cur['rank_points']:,} RP), "
                 f"{display}'s peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
+        text += f" [season {latest.get('season_id')}, wins {latest['season_statistics']['match_outcomes']['wins']}]"
         return text, 200, {
             "Content-Type": "text/plain; charset=utf-8",
             "Cache-Control": "no-store",
