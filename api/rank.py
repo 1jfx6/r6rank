@@ -58,7 +58,7 @@ def rank():
                 f"{display}'s peak rank: {rank_name_from_rp(peak_rp)}, (Tracker: {name})")
         return text, 200, {
             "Content-Type": "text/plain; charset=utf-8",
-            "Cache-Control": "public, s-maxage=1800",
+            "Cache-Control": "no-store",
         }
     except Exception as e:
         return f"Error: {e!r}", 200, {"Cache-Control": "no-store"}
